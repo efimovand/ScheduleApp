@@ -7,10 +7,27 @@
 
 import SwiftUI
 
+enum type: String, Identifiable, CaseIterable { // Lesson Type Picker
+    case lection = "лекция"
+    case practice = "практика"
+    case null = "-"
+    var id: String { self.rawValue }
+}
+
+
 struct addSubjectView: View {
     
     @State var name: String = ""
     @State var teacher: String = ""
+    @State var room: String = ""
+    
+    @State var selectedType = type.lection
+    
+    @State var selectedStartTime: Date = Date()
+    @State var selectedEndTime: Date = Date()
+    
+    @State private var startTimePickerIsShown = false
+    @State private var endTimePickerIsShown = false
     
     var body: some View {
         
@@ -42,9 +59,9 @@ struct addSubjectView: View {
                 // Set
                 ZStack{
                     
-                    Rectangle()
+                    Rectangle() // Set Background
                         .foregroundColor(Color("backgroundColor"))
-                        .frame(width: .infinity, height: 362)
+                        .frame(width: .infinity, height: 367)
                     
                     VStack{
                         
@@ -61,18 +78,36 @@ struct addSubjectView: View {
                             RoundedRectangle(cornerRadius: 40)
                                 .foregroundColor(Color("subjectBackgroundColor"))
                             
-                            TextField("Преподаватель", text: $name)
-                                .font(.system(size: 20, weight: .regular))
+                            TextField("Преподаватель", text: $teacher)
+                                .font(.system(size: 18, weight: .regular))
                                 .padding(.leading, 85)
                         }.frame(width: 310, height: 37)
                             .padding(.vertical, 7)
                         
                         HStack{
                             
-                            VStack{ // Room + Type
+                            VStack(alignment: .leading, spacing: 13){ // Room + Type
                                 
-                                HStack{ // Room
-                                    //
+                                HStack(spacing: 7){ // Room + Change Circle
+                                    ZStack{ // Room
+                                        RoundedRectangle(cornerRadius: 40)
+                                            .foregroundColor(Color("subjectBackgroundColor"))
+                                            .frame(width: 100, height: 37)
+                                        
+                                        TextField("Кабинет", text: $room)
+                                            .font(.system(size: 16, weight: .regular))
+                                            .frame(width: 70, height: 37)
+                                            .offset(x: 4)
+                                    }
+                                    
+                                    Button(action: { // Change Circle
+                                        // Change Room Type (!)
+                                    }) {
+                                        Circle()
+                                            .foregroundColor(Color("subjectBackgroundColor"))
+                                            .frame(width: 32, height: 32)
+                                            .overlay(Image("changeRoomType").resizable().frame(width: 12, height: 12).opacity(0.6))
+                                    }
                                 }
                                 
                                 ZStack{ // Type
@@ -80,9 +115,20 @@ struct addSubjectView: View {
                                         .foregroundColor(Color("subjectBackgroundColor"))
                                         .frame(width: 142, height: 37)
                                     
-                                    //
+                                    Menu { // Picker
+                                        Picker(selection: $selectedType) {
+                                            ForEach(type.allCases) { value in
+                                                Text(value.rawValue)
+                                                    .tag(value)
+                                            }
+                                        } label: {}
+                                    } label: {
+                                        Text(selectedType.rawValue)
+                                            .foregroundColor(Color("addSubjectTimeTextColor"))
+                                            .font(.system(size: 14, weight: .regular))
+                                    }.id(selectedType)
                                 }
-                            }
+                            }.padding(.top)
                             
                             Spacer()
                             
@@ -97,20 +143,36 @@ struct addSubjectView: View {
                                         .frame(width: 140, height: 80)
                                     
                                     VStack{
-                                        HStack{ // Start Time
+                                        HStack(spacing: 35){ // Start Time
                                             Text("начало")
                                                 .foregroundColor(Color("addSubjectTimeTextColor"))
                                                 .font(.system(size: 14, weight: .regular))
+                                                .frame(width: 50, alignment: .leading)
+                                            
+                                            Button(action: { // Start Time Picker
+                                                endTimePickerIsShown = false
+                                                startTimePickerIsShown = true
+                                            }) {
+                                                Text(formateDate(date: selectedStartTime)).foregroundColor(Color("addSubjectTimeTextColor")).font(.system(size: 14, weight: .regular))
+                                            }.frame(width: 40, alignment: .trailing)
                                         }
                                         
                                         Rectangle() // Divider
                                             .foregroundColor(Color("addSubjectTimeDivider"))
                                             .frame(width: 140, height: 1)
                                         
-                                        HStack{ // End Time
+                                        HStack(spacing: 35){ // End Time
                                             Text("конец")
                                                 .foregroundColor(Color("addSubjectTimeTextColor"))
                                                 .font(.system(size: 14, weight: .regular))
+                                                .frame(width: 50, alignment: .leading)
+                                            
+                                            Button(action: { // End Time Picker
+                                                startTimePickerIsShown = false
+                                                endTimePickerIsShown = true
+                                            }) {
+                                                Text(formateDate(date: selectedEndTime)).foregroundColor(Color("addSubjectTimeTextColor")).font(.system(size: 14, weight: .regular))
+                                            }.frame(width: 40, alignment: .trailing)
                                         }
                                     }
                                 }
@@ -156,20 +218,80 @@ struct addSubjectView: View {
                             .frame(maxWidth: 320, alignment: .leading)
                         
                     }.frame(maxWidth: 340)
-                        .padding(.vertical, 15)
+                        .padding(.vertical, 18)
                     
                 }
                 
                 Rectangle() // Bottom Divider
                     .foregroundColor(Color("addSubjectDividers"))
                     .frame(width: .infinity, height: 1)
-            }
+            }.padding(.vertical, 5)
             
             Spacer()
             
+            // Navigation Buttons
+            ZStack{
+                RoundedCorners(tl: 35, tr: 35, bl: 0, br: 0)
+                    .foregroundColor(Color("headerColor"))
+                    .frame(width: .infinity, height: 66)
+                
+                HStack(spacing: 45){
+                    
+                    Button(action: { // Next Button
+                        // Next Page (!)
+                    }) {
+                        RoundedRectangle(cornerRadius: 15)
+                            .foregroundColor(Color.purple)
+                            .frame(width: 130, height: 45)
+                            .overlay(Text("Далее").foregroundColor(Color.white).font(.system(size: 20, weight: .medium)))
+                    }
+                    
+                    Button(action: { // Cancel Button
+                        // Previous Page (!)
+                    }) {
+                        RoundedRectangle(cornerRadius: 15)
+                            .foregroundColor(Color("addSubjectCancelButton"))
+                            .frame(width: 130, height: 45)
+                            .overlay(Text("Отмена").foregroundColor(Color.white).font(.system(size: 20, weight: .medium)))
+                    }
+                    
+                }
+            }
+            
+            // Start/End Time Pickers
+            if (startTimePickerIsShown) {
+                ZStack{
+                    Rectangle()
+                        .foregroundColor(Color("subjectBackgroundColor"))
+                        .frame(width: .infinity, height: 200, alignment: .leading)
+                    
+                    DatePicker("", selection: $selectedStartTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .frame(width: .infinity, height: 200, alignment: .center)
+                        .labelsHidden()
+                        .opacity(0.5)
+                }
+            }
+            
+            if (endTimePickerIsShown) {
+                ZStack{
+                    Rectangle()
+                        .foregroundColor(Color("subjectBackgroundColor"))
+                        .frame(width: .infinity, height: 200, alignment: .leading)
+                    
+                    DatePicker("", selection: $selectedEndTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .frame(width: .infinity, height: 200, alignment: .center)
+                        .labelsHidden()
+                        .opacity(0.5)
+                }
+            }
+            
         }.ignoresSafeArea()
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color("subjectBackgroundColor"))
+            .preferredColorScheme(.dark)
         
     }
     
